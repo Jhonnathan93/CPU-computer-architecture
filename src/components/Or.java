@@ -1,5 +1,3 @@
-package src.components;
-
 public class Or {
     private short a;
     private short b;

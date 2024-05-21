@@ -1,4 +1,3 @@
-package src.components;
 public class Word {
     short n;
 

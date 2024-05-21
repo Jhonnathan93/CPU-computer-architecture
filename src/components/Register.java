@@ -1,4 +1,3 @@
-package src.components;
 public class Register {
     private short value;
 

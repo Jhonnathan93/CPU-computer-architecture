@@ -1,5 +1,3 @@
-package src.components;
-
 public class Multiplexor {
     private short a;
     private short b;

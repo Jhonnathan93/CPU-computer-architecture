@@ -1,5 +1,3 @@
-package src.components;
-
 public class And {
     private short a;
     private short b;

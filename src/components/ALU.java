@@ -1,5 +1,3 @@
-package src.components;
-
 public class ALU {
     short x;
     short y;
