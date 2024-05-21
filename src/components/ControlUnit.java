@@ -22,6 +22,7 @@ public class ControlUnit {
 
     private short inM;
     private short instruction;
+    private short instructionPosition;
     private boolean reset;
 
     private short outM;
@@ -58,7 +59,8 @@ public class ControlUnit {
 
         // Initialize inputs
         inM = 0;
-        instruction = rom.getInstruction((short) 0);
+        instructionPosition = 0;
+        instruction = rom.getInstruction(instructionPosition);
 
         // Initialize outputs
         outM = 0;
@@ -104,6 +106,7 @@ public class ControlUnit {
         not1.setIn(Word.getBit(instruction, 15));
         not1.compute();
         short isAInstruction = not1.getOut();
+        isAInstruction = (short) (isAInstruction & 1);
 
         and1.setA(isCInstruction);
         and1.setB(Word.getBit(instruction, 5));
@@ -152,10 +155,12 @@ public class ControlUnit {
         not2.setIn(alu.ng);
         not2.compute();
         short isNonNeg = not2.getOut();
+        isNonNeg = (short) (isNonNeg & 1);
 
         not3.setIn(alu.zr);
         not3.compute();
         short isNonZero = not3.getOut();
+        isNonZero = (short) (isNonZero & 1);
 
         and3.setA(isNonNeg);
         and3.setB(isNonZero);
@@ -196,14 +201,20 @@ public class ControlUnit {
         and8.setB(jumpToA);
         and8.compute();
         short loadPC = and8.getOut();
+        System.out.println(pc.getValue());
 
         not1.setIn(loadPC);
         not1.compute();
         // Quizas aqui haya error
         short PCinc = not1.getOut();
+        PCinc = (short) (PCinc & 1);
 
         pc.load(outAReg, loadPC == 1);
         pc.inc();
+        pcOut++;
+        instructionPosition++;
+        instruction = rom.getInstruction(instructionPosition);
+        System.out.println(pc.getValue());
         pc.reset(reset);
     }
 
