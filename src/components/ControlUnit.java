@@ -29,6 +29,9 @@ public class ControlUnit {
     private short addressM;
     private short pcOut;
 
+    private ROM rom;
+    private RAM ram;
+
     public ControlUnit() {
         or1 = new Or();
         or2 = new Or();
@@ -50,10 +53,12 @@ public class ControlUnit {
         dRegister = new Register();
         alu = new ALU();
         pc = new PC();
+        ram = new RAM();
+        rom = new ROM();
 
         // Initialize inputs
-        inM = 7;
-        instruction = 25;
+        inM = 0;
+        instruction = rom.getInstruction((short) 0);
 
         // Initialize outputs
         outM = 0;
@@ -200,5 +205,31 @@ public class ControlUnit {
         pc.load(outAReg, loadPC == 1);
         pc.inc();
         pc.reset(reset);
+    }
+
+    public static void main(String[] args) {
+        ControlUnit controlUnit = new ControlUnit();
+        controlUnit.rom.setInstruction((short) 0, (short) 0b0000000000000000);
+        controlUnit.rom.setInstruction((short) 1, (short) 0b1111110000010000);
+        controlUnit.rom.setInstruction((short) 2, (short) 0b0000000000000001);
+        controlUnit.rom.setInstruction((short) 3, (short) 0b1111000010010000);
+        controlUnit.rom.setInstruction((short) 4, (short) 0b0000000000000010);
+        controlUnit.rom.setInstruction((short) 5, (short) 0b1110001100001000);
+
+        controlUnit.ram.setValue((short) 0, (short) 0b0000000000000101);
+        controlUnit.ram.setValue((short) 1, (short) 0b0000000000000011);
+
+        for (int i = 0; i < 6; i++) {
+            controlUnit.compute();
+            short outM = controlUnit.getOutM();
+            boolean writeM = controlUnit.isWriteM();
+            short addressM = controlUnit.getAddressM();
+            short pcOut = controlUnit.getPcOut();
+
+            System.out.println("OutM: " + outM);
+            System.out.println("WriteM: " + writeM);
+            System.out.println("AddressM: " + addressM);
+            System.out.println("PC: " + pcOut);
+        }
     }
 }
