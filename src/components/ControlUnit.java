@@ -194,6 +194,7 @@ public class ControlUnit {
 
         not1.setIn(loadPC);
         not1.compute();
+        // Quizas aqui haya error
         short PCinc = not1.getOut();
 
         pc.load(outAReg, loadPC == 1);
