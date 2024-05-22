@@ -1,4 +1,9 @@
+/**
+ * The ControlUnit class simulates the functionality of a computer,
+ * executing a set of instructions stored in ROM and manipulating data in RAM.
+ */
 public class ControlUnit {
+    // Declaration of logic gates, ALU, registers, and PC
     private Or or1;
     private Or or2;
     private Or or3;
@@ -20,10 +25,14 @@ public class ControlUnit {
     private ALU alu;
     private PC pc;
 
+    // Input variables
+
     private short inM;
     private short instruction;
     private short instructionPosition;
     private boolean reset;
+
+    // Output variables
 
     private short outDReg;
     private short outM;
@@ -31,8 +40,14 @@ public class ControlUnit {
     private short addressM;
     private short pcOut;
 
+    // Memory
+
     private ROM rom;
     private RAM ram;
+
+    /**
+     * Constructs a ControlUnit and initializes its components.
+     */
 
     public ControlUnit() {
         or1 = new Or();
@@ -70,34 +85,75 @@ public class ControlUnit {
         pcOut = 0;
     }
 
+    /**
+     * Sets the input value from memory.
+     * 
+     * @param inM the input value from memory
+     */
+
     public void setInM(short inM) {
         this.inM = inM;
     }
 
+
+     /**
+     * Sets the current instruction.
+     * 
+     * @param instruction the current instruction
+     */
     public void setInstruction(short instruction) {
         this.instruction = instruction;
     }
 
+    /**
+     * Sets the reset flag.
+     * 
+     * @param reset the reset flag
+     */
     public void setReset(boolean reset) {
         this.reset = reset;
     }
+
+     /**
+     * Returns the output value to be written to memory.
+     * 
+     * @return the output value
+     */
 
     public short getOutM() {
         return outM;
     }
 
+    /**
+     * Returns whether the memory should be written.
+     * 
+     * @return true if memory should be written, false otherwise
+     */
     public boolean isWriteM() {
         return writeM;
     }
 
+    /**
+     * Returns the memory address to be accessed.
+     * 
+     * @return the memory address
+     */
     public short getAddressM() {
         return addressM;
     }
 
+    /**
+     * Returns the current value of the program counter.
+     * 
+     * @return the program counter value
+     */
     public short getPcOut() {
         return pcOut;
     }
 
+     /**
+     * Executes the computation process of the control unit.
+     */
     public void compute() {
         // Decode which instruction to execute
         or1.setA(Word.getBit(instruction, 15));
@@ -134,9 +190,6 @@ public class ControlUnit {
         and2.compute();
         short loadD = and2.getOut();
     
-        //dRegister.load(alu.out, loadD == 1);
-        //short outDReg = dRegister.getValue();
-    
         mux2.setInputs(outAReg, inM, Word.getBit(instruction, 12));
         mux2.compute();
         short outAorM = mux2.getResult();
@@ -152,6 +205,7 @@ public class ControlUnit {
         alu.compute();
         short outALU = alu.out;
 
+        // Loads ALU output to D Register
         dRegister.load(alu.out, loadD == 1);
         outDReg = dRegister.getValue();
     
@@ -176,10 +230,6 @@ public class ControlUnit {
         and4.setB(Word.getBit(instruction, 3));
         and4.compute();
         writeM = and4.getOut() == 1;
-
-        if (writeM){
-            ram.setValue(addressM, alu.out);
-        }
     
         and5.setA(isPositive);
         and5.setB(Word.getBit(instruction, 0));
@@ -210,7 +260,6 @@ public class ControlUnit {
         and8.setB(jumpToA);
         and8.compute();
         short loadPC = and8.getOut();
-        System.out.println(pc.getValue());
     
         not1.setIn(loadPC);
         not1.compute();
@@ -222,13 +271,20 @@ public class ControlUnit {
         pcOut = pc.getValue();
         instructionPosition = pcOut;
         instruction = rom.getInstruction(instructionPosition);
-        System.out.println(pc.getValue());
         pc.reset(reset);
     }
     
+
+    /**
+     * Main method to run the simulation of the ControlUnit.
+     * 
+     * @param args command line arguments
+     */
    
     public static void main(String[] args) {
         ControlUnit controlUnit = new ControlUnit();
+
+        // Program to add two numbers from the RAM and store result in address 2
         controlUnit.rom.setInstruction((short) 0, (short) 0b0000000000000000); // @0
         controlUnit.rom.setInstruction((short) 1, (short) 0b1111110000010000); // D=M
         controlUnit.rom.setInstruction((short) 2, (short) 0b0000000000000001); // @1
@@ -236,6 +292,7 @@ public class ControlUnit {
         controlUnit.rom.setInstruction((short) 4, (short) 0b0000000000000010); // @2
         controlUnit.rom.setInstruction((short) 5, (short) 0b1110001100001000); // M=D
     
+        // Example values to test accuracy of program
         controlUnit.ram.setValue((short) 0, (short) 0b0000000000000101); // 5
         controlUnit.ram.setValue((short) 1, (short) 0b0000000000000011); // 3
     
@@ -246,6 +303,11 @@ public class ControlUnit {
             boolean writeM = controlUnit.isWriteM();
             short addressM = controlUnit.getAddressM();
             short pcOut = controlUnit.getPcOut();
+            short aluout = controlUnit.alu.out;
+
+            if (writeM){
+                controlUnit.ram.setValue(addressM, aluout);
+            }
     
             System.out.println("PcOut" + pcOut);
             System.out.println("OutM: " + outM);
@@ -253,8 +315,10 @@ public class ControlUnit {
             System.out.println("AddressM: " + addressM);
             System.out.println("PC: " + controlUnit.pc.getValue());
             System.out.println("ALU: " + controlUnit.alu.out);
+            System.out.print("\n");
         }
-    
+
+        // Print statement to test result
         System.out.println("RAM[2]: " + controlUnit.ram.getValue((short) 2)); // should print 8
     }
     
