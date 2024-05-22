@@ -149,6 +149,9 @@ public class ControlUnit {
         alu.no = Word.getBit(instruction, 6);
         alu.compute();
         short outALU = alu.out;
+
+        dRegister.load(alu.out, loadD == 1);
+        outDReg = dRegister.getValue();
     
         outM = outALU;
     
@@ -231,6 +234,7 @@ public class ControlUnit {
         controlUnit.ram.setValue((short) 1, (short) 0b0000000000000011); // 3
     
         for (int i = 0; i < 6; i++) {
+            controlUnit.inM = controlUnit.ram.getValue((short) controlUnit.addressM);
             controlUnit.compute();
             short outM = controlUnit.getOutM();
             boolean writeM = controlUnit.isWriteM();
@@ -242,6 +246,7 @@ public class ControlUnit {
             System.out.println("WriteM: " + writeM);
             System.out.println("AddressM: " + addressM);
             System.out.println("PC: " + controlUnit.pc.getValue());
+            System.out.println("ALU: " + controlUnit.alu.out);
         }
     
         System.out.println("RAM[2]: " + controlUnit.ram.getValue((short) 2)); // should print 8
