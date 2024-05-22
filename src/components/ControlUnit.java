@@ -102,43 +102,43 @@ public class ControlUnit {
         or1.setB((short) 0); // b=false
         or1.compute();
         short isCInstruction = or1.getOut();
-
+    
         not1.setIn(Word.getBit(instruction, 15));
         not1.compute();
         short isAInstruction = not1.getOut();
         isAInstruction = (short) (isAInstruction & 1);
-
+    
         and1.setA(isCInstruction);
         and1.setB(Word.getBit(instruction, 5));
         and1.compute();
         short isCWriteA = and1.getOut();
-
+    
         or2.setA(isAInstruction);
         or2.setB(isCWriteA);
         or2.compute();
         short loadA = or2.getOut();
-
+    
         mux1.setInputs(instruction, alu.out, isCWriteA);
         mux1.compute();
         short inAReg = mux1.getResult();
-
+    
         aRegister.load(inAReg, loadA == 1);
         short outAReg = aRegister.getValue();
-
-        addressM = Word.extractBits(outAReg, 0, 14);
-        
+    
+        addressM = outAReg;
+    
         and2.setA(isCInstruction);
         and2.setB(Word.getBit(instruction, 4));
         and2.compute();
         short loadD = and2.getOut();
-
+    
         dRegister.load(alu.out, loadD == 1);
         short outDReg = dRegister.getValue();
-
+    
         mux2.setInputs(outAReg, inM, Word.getBit(instruction, 12));
         mux2.compute();
         short outAorM = mux2.getResult();
-
+    
         alu.x = outDReg;
         alu.y = outAorM;
         alu.zx = Word.getBit(instruction, 11);
@@ -149,98 +149,102 @@ public class ControlUnit {
         alu.no = Word.getBit(instruction, 6);
         alu.compute();
         short outALU = alu.out;
-
+    
         outM = outALU;
-
+    
         not2.setIn(alu.ng);
         not2.compute();
         short isNonNeg = not2.getOut();
         isNonNeg = (short) (isNonNeg & 1);
-
+    
         not3.setIn(alu.zr);
         not3.compute();
         short isNonZero = not3.getOut();
         isNonZero = (short) (isNonZero & 1);
-
+    
         and3.setA(isNonNeg);
         and3.setB(isNonZero);
         and3.compute();
         short isPositive = and3.getOut();
-
+    
         and4.setA(isCInstruction);
         and4.setB(Word.getBit(instruction, 3));
         and4.compute();
         writeM = and4.getOut() == 1;
-
+    
         and5.setA(isPositive);
         and5.setB(Word.getBit(instruction, 0));
         and5.compute();
         short JGT = and5.getOut();
-
+    
         and6.setA(alu.zr);
         and6.setB(Word.getBit(instruction, 1));
         and6.compute();
         short JEQ = and6.getOut();
-
+    
         and7.setA(alu.ng);
         and7.setB(Word.getBit(instruction, 2));
         and7.compute();
         short JLT = and7.getOut();
-
+    
         or3.setA(JEQ);
         or3.setB(JLT);
         or3.compute();
         short JLE = or3.getOut();
-
+    
         or2.setA(JLE);
         or2.setB(JGT);
         or2.compute();
         short jumpToA = or2.getOut();
-
+    
         and8.setA(isCInstruction);
         and8.setB(jumpToA);
         and8.compute();
         short loadPC = and8.getOut();
         System.out.println(pc.getValue());
-
+    
         not1.setIn(loadPC);
         not1.compute();
-        // Quizas aqui haya error
         short PCinc = not1.getOut();
         PCinc = (short) (PCinc & 1);
-
+    
         pc.load(outAReg, loadPC == 1);
         pc.inc();
-        pcOut++;
-        instructionPosition++;
+        pcOut = pc.getValue();
+        instructionPosition = pcOut;
         instruction = rom.getInstruction(instructionPosition);
         System.out.println(pc.getValue());
         pc.reset(reset);
     }
-
+    
+   
     public static void main(String[] args) {
         ControlUnit controlUnit = new ControlUnit();
-        controlUnit.rom.setInstruction((short) 0, (short) 0b0000000000000000);
-        controlUnit.rom.setInstruction((short) 1, (short) 0b1111110000010000);
-        controlUnit.rom.setInstruction((short) 2, (short) 0b0000000000000001);
-        controlUnit.rom.setInstruction((short) 3, (short) 0b1111000010010000);
-        controlUnit.rom.setInstruction((short) 4, (short) 0b0000000000000010);
-        controlUnit.rom.setInstruction((short) 5, (short) 0b1110001100001000);
-
-        controlUnit.ram.setValue((short) 0, (short) 0b0000000000000101);
-        controlUnit.ram.setValue((short) 1, (short) 0b0000000000000011);
-
+        controlUnit.rom.setInstruction((short) 0, (short) 0b0000000000000000); // @0
+        controlUnit.rom.setInstruction((short) 1, (short) 0b1111110000010000); // D=M
+        controlUnit.rom.setInstruction((short) 2, (short) 0b0000000000000001); // @1
+        controlUnit.rom.setInstruction((short) 3, (short) 0b1111000010010000); // D=D+M
+        controlUnit.rom.setInstruction((short) 4, (short) 0b0000000000000010); // @2
+        controlUnit.rom.setInstruction((short) 5, (short) 0b1110001100001000); // M=D
+    
+        controlUnit.ram.setValue((short) 0, (short) 0b0000000000000101); // 5
+        controlUnit.ram.setValue((short) 1, (short) 0b0000000000000011); // 3
+    
         for (int i = 0; i < 6; i++) {
             controlUnit.compute();
             short outM = controlUnit.getOutM();
             boolean writeM = controlUnit.isWriteM();
             short addressM = controlUnit.getAddressM();
             short pcOut = controlUnit.getPcOut();
-
+    
+            System.out.println("PcOut" + pcOut);
             System.out.println("OutM: " + outM);
             System.out.println("WriteM: " + writeM);
             System.out.println("AddressM: " + addressM);
-            System.out.println("PC: " + pcOut);
+            System.out.println("PC: " + controlUnit.pc.getValue());
         }
+    
+        System.out.println("RAM[2]: " + controlUnit.ram.getValue((short) 2)); // should print 8
     }
+    
 }
