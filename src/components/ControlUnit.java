@@ -25,6 +25,7 @@ public class ControlUnit {
     private short instructionPosition;
     private boolean reset;
 
+    private short outDReg;
     private short outM;
     private boolean writeM;
     private short addressM;
@@ -64,6 +65,7 @@ public class ControlUnit {
 
         // Initialize outputs
         outM = 0;
+        outDReg = 0;
         addressM = 0;
         pcOut = 0;
     }
@@ -132,8 +134,8 @@ public class ControlUnit {
         and2.compute();
         short loadD = and2.getOut();
     
-        dRegister.load(alu.out, loadD == 1);
-        short outDReg = dRegister.getValue();
+        //dRegister.load(alu.out, loadD == 1);
+        //short outDReg = dRegister.getValue();
     
         mux2.setInputs(outAReg, inM, Word.getBit(instruction, 12));
         mux2.compute();
@@ -174,6 +176,10 @@ public class ControlUnit {
         and4.setB(Word.getBit(instruction, 3));
         and4.compute();
         writeM = and4.getOut() == 1;
+
+        if (writeM){
+            ram.setValue(addressM, alu.out);
+        }
     
         and5.setA(isPositive);
         and5.setB(Word.getBit(instruction, 0));
